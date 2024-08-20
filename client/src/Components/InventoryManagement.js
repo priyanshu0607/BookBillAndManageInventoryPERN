@@ -12,7 +12,7 @@ const ViewItems = () => {
 
   const getItems = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/bill/items");
+      const response = await fetch("https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/items");
       const jsonData = await response.json();
 
       if (jsonData && Array.isArray(jsonData.rows)) {
@@ -34,7 +34,7 @@ const ViewItems = () => {
 
   const handleSaveClick = async (itemId) => {
     try {
-      await fetch(`http://localhost:3000/api/bill/items/edit/${itemId}`, {
+      await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/items/edit/${itemId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -55,7 +55,7 @@ const ViewItems = () => {
 
   const handleDelete = async (itemId) => {
     try {
-      await fetch(`http://localhost:3000/api/bill/items/delete/${itemId}`, {
+      await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/items/delete/${itemId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
