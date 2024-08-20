@@ -35,7 +35,7 @@ const EditBill2 = () => {
 
   const fetchBillData = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/bill/displayBill/${id}`);
+      const response = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/displayBill/${id}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -121,7 +121,7 @@ const EditBill2 = () => {
         items_ordered: itemsStringArray
       };
 
-      const response = await fetch(`http://localhost:3000/api/bill/updateBooking/${updatedBillData.bill_id}`, {
+      const response = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/updateBooking/${updatedBillData.bill_id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
