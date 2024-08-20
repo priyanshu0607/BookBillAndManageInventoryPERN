@@ -13,7 +13,7 @@ const ViewBill = () => {
   useEffect(() => {
     const getBill = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/bill/displayAllBill");
+        const response = await fetch("https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/displayAllBill");
         const billList = await response.json();
 
         if (!billList || !Array.isArray(billList.rows) || billList.rows.length === 0) {
@@ -31,13 +31,13 @@ const ViewBill = () => {
         const maxId = Math.max(...validIds);
         console.log("Max bill ID:", maxId);
 
-        const billResponse = await fetch(`http://localhost:3000/api/bill/displayBill/${maxId}`);
+        const billResponse = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/displayBill/${maxId}`);
         const jsonData = await billResponse.json();
 
         setBill(jsonData);
 
         // Fetch items for the max bill ID
-        const itemsResponse = await fetch(`http://localhost:3000/api/items/getItems/${maxId}`);
+        const itemsResponse = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/items/getItems/${maxId}`);
         const itemsData = await itemsResponse.json();
         setItems(itemsData);
       } catch (err) {
@@ -104,7 +104,7 @@ const ViewBill = () => {
     window.open(whatsappUrl, '_blank');
 
     try {
-      const response = await fetch(`http://localhost:3000/api/messageSent/${bill.bill_id}`, {
+      const response = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/messageSent/${bill.bill_id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
