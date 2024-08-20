@@ -16,7 +16,7 @@ const ViewReturnedOrders = () => {
 
   const getOrders = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/bill/getOrdersR");
+      const response = await fetch("https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/getOrdersR");
       const jsonData = await response.json();
 
       if (jsonData && Array.isArray(jsonData)) {
@@ -112,7 +112,7 @@ const ViewReturnedOrders = () => {
   const handleDelete = async (bookingId) => {
     try {
       // Make API call to delete booking with bookingId
-      await fetch(`http://localhost:3000/api/bill/deleteBill/${bookingId}`, {
+      await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/deleteBill/${bookingId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
