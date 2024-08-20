@@ -89,7 +89,7 @@ const Bookingitems = () => {
                 items_ordered: selectedItems
             };
 
-            const response = await fetch("https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/createBooking", {
+            const response = await fetch("http://localhost:3000/api/bill/createBooking", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
@@ -130,7 +130,7 @@ const Bookingitems = () => {
                     status: "Booked"
                 };
 
-                const itemResponse = await fetch("https://book-bill-and-manage-inventory-pern.vercel.app/api/items/insertItems", {
+                const itemResponse = await fetch("http://localhost:3000/api/items/insertItems", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(itemBody)
