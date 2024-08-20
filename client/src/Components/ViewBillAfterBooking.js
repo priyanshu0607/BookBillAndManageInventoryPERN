@@ -14,10 +14,10 @@ const ViewBillAfterBooking = () => {
   useEffect(() => {
     const getBill = async () => {
       try {
-        const billResponse = await fetch(`http://localhost:3000/api/bill/displayBill/${bookingId}`);
+        const billResponse = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/displayBill/${bookingId}`);
         const jsonData = await billResponse.json();
         setBill(jsonData);
-        const itemsResponse = await fetch(`http://localhost:3000/api/items/getItems/${bookingId}`);
+        const itemsResponse = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/items/getItems/${bookingId}`);
         const itemsData = await itemsResponse.json();
         setItems(itemsData);
       } catch (err) {
@@ -84,7 +84,7 @@ const ViewBillAfterBooking = () => {
     window.open(whatsappUrl, '_blank');
 
     try {
-      const response = await fetch(`http://localhost:3000/api/messageSent/${bill.bill_id}`, {
+      const response = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/messageSent/${bill.bill_id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
