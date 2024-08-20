@@ -17,7 +17,7 @@ const Homepage = () => {
 
   const getBookings = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/bill/getBookings");
+      const response = await fetch("https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/getBookings");
       const jsonData = await response.json();
 
       if (Array.isArray(jsonData)) {
@@ -34,7 +34,7 @@ const Homepage = () => {
 
   const getOrders = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/bill/displayAllBill");
+      const response = await fetch("https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/displayAllBill");
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -57,7 +57,7 @@ const Homepage = () => {
   const handleCreateBill = async (id) => {
     try {
       console.log(`Attempting to return bill with ID: ${id}`);
-      const response = await fetch(`http://localhost:3000/api/bill/setOrders/${id}`, {
+      const response = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/setOrders/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" }
       });
@@ -78,7 +78,7 @@ const Homepage = () => {
 
   const createBill = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/bill/getBookings/${id}`, {
+      const response = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/getBookings/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
@@ -99,7 +99,7 @@ const Homepage = () => {
 
   const editInvoiceDate = async(id) =>{
     try {
-      const response = await fetch(`http://localhost:3000/api/bill/setBookings/${id}`, {
+      const response = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/setBookings/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
@@ -117,7 +117,7 @@ const Homepage = () => {
   };
   const editItemsStatus = async(id) =>{
     try {
-      const response = await fetch(`http://localhost:3000/api/items/setItems/${id}`, {
+      const response = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/items/setItems/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
@@ -135,7 +135,7 @@ const Homepage = () => {
   };
   const editItemsStatusR = async(id) =>{
     try {
-      const response = await fetch(`http://localhost:3000/api/items/setItemsR/${id}`, {
+      const response = await fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/items/setItemsR/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
@@ -186,7 +186,7 @@ const Homepage = () => {
   const handleDeleteBookings = async () => {
     try {
       const deleteRequests = selectedBookings.map(id =>
-        fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
+        fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/deleteBill/${id}`, {
           method: "DELETE",
         })
       );
@@ -204,7 +204,7 @@ const Homepage = () => {
   const handleDeleteOrders = async () => {
     try {
       const deleteRequests = selectedOrders.map(id =>
-        fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
+        fetch(`https://book-bill-and-manage-inventory-pern.vercel.app/api/bill/deleteBill/${id}`, {
           method: "DELETE",
         })
       );
