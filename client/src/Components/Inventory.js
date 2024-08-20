@@ -18,7 +18,7 @@ const ItemForm = ({ addItem }) => {
 
         if (formMode === 'bulk' && items.length > 0) {
             try {
-                const response = await fetch('http://localhost:3000/api/items/AddInventory', {
+                const response = await fetch('https://book-bill-and-manage-inventory-pern.vercel.app/api/items/AddInventory', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -47,7 +47,7 @@ const ItemForm = ({ addItem }) => {
             };
 
             try {
-                const response = await fetch('http://localhost:3000/api/items/AddInventory', {
+                const response = await fetch('https://book-bill-and-manage-inventory-pern.vercel.app/api/items/AddInventory', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
