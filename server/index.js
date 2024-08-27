@@ -4,7 +4,7 @@ const app = express();
 const billRoutes = require("./routes/bill.js");
 const userRoutes = require("./routes/users.js");
 const itemRoutes = require("./routes/items.js");
-app.use(cors()); 
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 /* API Routes */
