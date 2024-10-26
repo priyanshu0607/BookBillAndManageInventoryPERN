@@ -5,12 +5,7 @@ import './Sidebar.css'; // Import the CSS file for styling
 
 const Sidebar = () => {
   const location = useLocation();
-  const [isExpanded, setIsExpanded] = useState(true); // Default to expanded
-
-  useEffect(() => {
-    // Set isExpanded to false only on the homepage
-    setIsExpanded(location.pathname !== '/');
-  }, [location]);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -24,6 +19,10 @@ const Sidebar = () => {
     navigate('/login'); // Redirect to login page after logout
   };
 
+  const handleNavClick = () => {
+    setIsExpanded(false); // Close sidebar when a navigation item is clicked
+  };
+
   return (
     <div className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}>
       <button className="toggle-button" onClick={toggleSidebar}>
@@ -33,42 +32,42 @@ const Sidebar = () => {
         <nav className="sidebar-nav">
           <ul>
             <li>
-              <NavLink to="/" exact activeClassName="active">
+              <NavLink to="/" exact activeClassName="active" onClick={handleNavClick}>
                 Home
               </NavLink>
             </li>
             <li>
-              <NavLink to="/create-bill" activeClassName="active">
+              <NavLink to="/create-bill" activeClassName="active" onClick={handleNavClick}>
                 Create Bill
               </NavLink>
             </li>
             <li>
-              <NavLink to="/booking" activeClassName="active">
+              <NavLink to="/booking" activeClassName="active" onClick={handleNavClick}>
                 Booking
               </NavLink>
             </li>
             <li>
-              <NavLink to="/view-bookings" activeClassName="active">
+              <NavLink to="/view-bookings" activeClassName="active" onClick={handleNavClick}>
                 View Bookings
               </NavLink>
             </li>
             <li>
-              <NavLink to="/view-past-orders" activeClassName="active">
+              <NavLink to="/view-past-orders" activeClassName="active" onClick={handleNavClick}>
                 View Orders
               </NavLink>
             </li>
             <li>
-              <NavLink to="/inventory" activeClassName="active">
+              <NavLink to="/inventory" activeClassName="active" onClick={handleNavClick}>
                 Add Inventory
               </NavLink>
             </li>
             <li>
-              <NavLink to="/inventoryManagement" activeClassName="active">
+              <NavLink to="/inventoryManagement" activeClassName="active" onClick={handleNavClick}>
                 Inventory Management
               </NavLink>
             </li>
             <li>
-              <button className="logout-button" onClick={handleLogout}>
+              <button className="logout-button" onClick={() => { handleLogout(); handleNavClick(); }}>
                 Logout
               </button>
             </li>
@@ -80,3 +79,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+
