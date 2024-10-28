@@ -9,6 +9,8 @@ const ViewBillAfterBooking = () => {
   const { bookingId } = useParams(); // Extract bookingId from URL
   const [bill, setBill] = useState(null);
   const [items, setItems] = useState([]);
+  const [itemsOrdered, setItemsOrdered] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,9 +19,8 @@ const ViewBillAfterBooking = () => {
         const billResponse = await fetch(`http://localhost:3000/api/bill/displayBill/${bookingId}`);
         const jsonData = await billResponse.json();
         setBill(jsonData);
-        const itemsResponse = await fetch(`http://localhost:3000/api/items/getItems/${bookingId}`);
-        const itemsData = await itemsResponse.json();
-        setItems(itemsData);
+        setItemsOrdered(parseItemsOrdered(jsonData.items_ordered));
+        setLoading(false);
       } catch (err) {
         console.error("Error fetching or parsing data:", err);
       }
@@ -27,7 +28,29 @@ const ViewBillAfterBooking = () => {
 
     getBill();
   }, [bookingId]);
+  const parseItemsOrdered = (itemsArray) => {
+    if (!itemsArray || !Array.isArray(itemsArray)) {
+      console.error("Invalid items array:", itemsArray);
+      return [];
+    }
 
+    return itemsArray.map(itemStr => {
+      const itemParts = itemStr.match(/item_description:\s*([^,]+)\s*item_size:\s*(\d+)\s*quantity:\s*(\d+)\s*rate:\s*(\d+\.?\d*)/);
+      if (!itemParts) {
+        console.error("Invalid item string format:", itemStr);
+        return null;
+      }
+
+      const item_description = itemParts[1].trim();
+      const item_size = parseInt(itemParts[2].trim(), 10);
+      const quantity = parseInt(itemParts[3].trim(), 10);
+      const rate = parseFloat(itemParts[4].trim());
+      const rateOfOne = rate/quantity;
+      const totalrate = quantity * rateOfOne;
+
+      return { item_description, item_size, quantity, rateOfOne, totalrate };
+    }).filter(item => item !== null);
+  };
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "2-digit", day: "2-digit" };
     const date = new Date(dateString);
@@ -146,14 +169,13 @@ const ViewBillAfterBooking = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {items.map((item, index) => (
-                        <tr key={index}>
-                          <td>{item.item_description}</td>
-                          <td>{item.item_size}</td>
-                          <td>{item.rate}</td>
-                          <td>{item.quantity_ordered}</td>
-                        </tr>
-                      ))}
+                    {itemsOrdered.map((item, index) => (
+                      <tr key={index}>
+                        <td>{item.item_description}</td>
+                        <td>{item.item_size}</td>
+                        <td>{item.rateOfOne}</td>
+                        <td>{item.quantity}</td>
+                        </tr>))}
                     </tbody>
                   </table>
                 </div>
