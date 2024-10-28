@@ -20,7 +20,7 @@ const ViewBookings = () => {
   const getBookings = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/bill/getBookings");
+      const response = await fetch(`http://localhost:3000/api/bill/getBookings`);
       const jsonData = await response.json();
 
       if (Array.isArray(jsonData)) {
@@ -164,4 +164,3 @@ const combination = async(id)=>{
 };
 
 export default ViewBookings;
-
