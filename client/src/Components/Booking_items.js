@@ -114,13 +114,6 @@ const Bookingitems = () => {
                 const quantity = parseInt(itemParts[2].trim(), 10);
                 const rate = parseFloat(itemParts[3].trim());
 
-                console.log(`Bill ID: ${createdBillId}`);
-                console.log(`Item ${index + 1}:`);
-                console.log(`  item_description: ${item_description}`);
-                console.log(`  item_size: ${item_size}`);
-                console.log(`  quantity: ${quantity}`);
-                console.log(`  rate: ${rate}`);
-
                 const itemBody = {
                     bill_id: createdBillId,
                     item_description: item_description,
@@ -139,7 +132,7 @@ const Bookingitems = () => {
                 if (!itemResponse.ok) {
                     throw new Error(`Failed to insert item ${index + 1}`);
                 }
-
+                await adjustInventoryQuantity(item_description, quantity);
                 return itemResponse.json();
             });
 
@@ -152,7 +145,24 @@ const Bookingitems = () => {
             toast.error("Error processing items or booking");
         }
     };
+    const adjustInventoryQuantity = async (itemDescription, quantity) => {
+        try {
+            console.log(itemDescription,quantity)
+            const response = await fetch(`http://localhost:3000/api/bill/updateQuantity`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ item_description: itemDescription, quantity: -quantity })
+            });
 
+            if (!response.ok) {
+                throw new Error(`Failed to adjust inventory for ${itemDescription}`);
+            }
+
+            console.log(`Inventory updated for ${itemDescription}: reduced by ${quantity}`);
+        } catch (err) {
+            console.error(`Error adjusting inventory for ${itemDescription}:`, err.message);
+        }
+    };
     return (
         <Fragment>
             <Sidebar />
