@@ -10,7 +10,7 @@ const SearchDropdown = ({ onSelectItem }) => {
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/api/bill/items');
+                const response = await axios.get(`http://localhost:3000/api/bill/items`);
                 setItems(response.data.rows);
             } catch (error) {
                 console.error('Error fetching items:', error);
@@ -68,7 +68,7 @@ const SearchDropdown = ({ onSelectItem }) => {
                             onMouseDown={() => handleItemClick(item)}
                             className="dropdown-item cursor-pointer"
                         >
-                            {item.item_description} ({item.item_size}) 
+                            {item.item_description} ,size:{item.item_size} ,quantity:{item.item_quantity}
                         </li>
                     ))}
                 </ul>
