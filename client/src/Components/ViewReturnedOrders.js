@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect, useState } from "react";
 import Sidebar from "../DesignComponents/SideBar";
 import { useNavigate } from "react-router-dom";
-import "./ViewBookings.css"; // Assuming you have a CSS file for styling
+import "./ViewBookings.css"; 
 import '@fortawesome/fontawesome-free/css/all.min.css'; // Import Font Awesome CSS
 
 const ViewReturnedOrders = () => {
@@ -16,7 +16,7 @@ const ViewReturnedOrders = () => {
 
   const getOrders = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/bill/getOrdersR");
+      const response = await fetch(`http://localhost:3000/api/bill/getOrdersR`);
       const jsonData = await response.json();
 
       if (jsonData && Array.isArray(jsonData)) {
