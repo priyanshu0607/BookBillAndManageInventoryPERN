@@ -2,7 +2,6 @@ import React, { useState, Fragment, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AddItems from "./AddItems";
 import Sidebar from "../DesignComponents/SideBar";
-//import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const CreateBill = () => {
@@ -88,7 +87,7 @@ const CreateBill = () => {
                 items_ordered: selectedItems
             };
 
-            const response = await fetch("http://localhost:3000/api/bill/createBill", {
+            const response = await fetch(`http://localhost:3000/api/bill/createBill`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
@@ -99,9 +98,8 @@ const CreateBill = () => {
             }
 
             const data = await response.json();
-            const createdBillId = data.bill_id; // Assuming your API returns the billId
+            const createdBillId = data.bill_id;
 
-            // Log each item with billId and insert into database
             const insertItemPromises = selectedItems.map(async (item, index) => {
                 const itemParts = item.split(/\s*item_description:|\s*item_size:|\s*quantity:|\s*rate:/).filter(part => !!part);
                 if (itemParts.length !== 4) {
@@ -113,13 +111,6 @@ const CreateBill = () => {
                 const quantity = parseInt(itemParts[2].trim(), 10);
                 const rate = parseFloat(itemParts[3].trim());
 
-                console.log(`Bill ID: ${createdBillId}`);
-                console.log(`Item ${index + 1}:`);
-                console.log(`  item_description: ${item_description}`);
-                console.log(`  item_size: ${item_size}`);
-                console.log(`  quantity: ${quantity}`);
-                console.log(`  rate: ${rate}`);
-
                 const itemBody = {
                     bill_id: createdBillId,
                     item_description: item_description,
@@ -129,7 +120,7 @@ const CreateBill = () => {
                     status: "Billed"
                 };
 
-                const itemResponse = await fetch("http://localhost:3000/api/items/insertItems", {
+                const itemResponse = await fetch(`http://localhost:3000/api/items/insertItems`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(itemBody)
@@ -139,18 +130,45 @@ const CreateBill = () => {
                     throw new Error(`Failed to insert item ${index + 1}`);
                 }
 
+                // Adjust inventory after inserting the item
+                await adjustInventoryQuantity(item_description, quantity);
+
                 return itemResponse.json();
             });
 
             await Promise.all(insertItemPromises);
 
             //toast.success("Billed successfully!");
-            navigate('/view-bill'); // Navigate after success
+            navigate('/view-bill');
         } catch (err) {
             console.error(err.message);
             //toast.error("Error processing items or billing");
         }
     };
+
+    // Adjust inventory function
+    const adjustInventoryQuantity = async (itemDescription, quantity) => {
+        try {
+            console.log(itemDescription,quantity)
+            const response = await fetch(`http://localhost:3000/api/bill/updateQuantity`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ item_description: itemDescription, quantity: -quantity })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to adjust inventory for ${itemDescription}`);
+            }
+
+            console.log(`Inventory updated for ${itemDescription}: reduced by ${quantity}`);
+        } catch (err) {
+            console.error(`Error adjusting inventory for ${itemDescription}:`, err.message);
+        }
+    };
+ 
+    
+
+    
     return (
         <Fragment>
             <Sidebar></Sidebar>
