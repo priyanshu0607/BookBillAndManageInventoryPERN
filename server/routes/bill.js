@@ -120,6 +120,51 @@ router.put("/items/edit/:id", async (req, res) => {
     }
 });
 
+
+
+router.patch('/updateQuantity', async (req, res) => {
+    const { item_description, quantity } = req.body;
+
+    if (!item_description || quantity === undefined) {
+        return res.status(400).json({ error: 'Item description and quantity are required' });
+    }
+
+    try {
+        // Fetch the current quantity of the item from the inventory
+        const currentItem = await pool.query(
+            'SELECT item_quantity FROM inventory WHERE item_description = $1',
+            [item_description]
+        );
+
+        if (currentItem.rows.length === 0) {
+            return res.status(404).json({ error: 'Item not found in inventory' });
+        }
+
+        const currentQuantity = currentItem.rows[0].item_quantity; // Use correct column name
+
+        // Calculate the new quantity
+        const newQuantity = currentQuantity + quantity;
+
+        if (newQuantity < 0) {
+            return res.status(400).json({ error: 'Not enough stock to fulfill this request' });
+        }
+
+        // Update the inventory quantity
+        const updatedItem = await pool.query(
+            'UPDATE inventory SET item_quantity = $1 WHERE item_description = $2 RETURNING *',
+            [newQuantity, item_description]
+        );
+
+        return res.json({ message: 'Inventory updated successfully', item: updatedItem.rows[0] });
+    } catch (err) {
+        console.error('Error updating inventory:', err.message);
+        return res.status(500).json({ error: 'Server error updating inventory' });
+    }
+});
+
+
+
+
 router.put("/updateBooking/:id", async (req, res) => {
     const { id } = req.params;
     const {
@@ -294,4 +339,17 @@ function getTodaysDate() {
 
     return `${year}-${month}-${day}`;
 }
+
+
+
+
+router.get("/displayItems/:id", async (req, res) => {
+    try {
+        const {id} = req.params;
+        const viewoneArray = await pool.query("Select items_ordered from booking_billing WHERE bill_id = $1",[id]);
+        res.json(viewoneArray.rows[0]);
+    } catch (err) {
+        return res.status(504).json(err);
+    }
+});
 module.exports = router;
