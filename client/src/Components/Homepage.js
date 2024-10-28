@@ -17,7 +17,7 @@ const Homepage = () => {
 
   const getBookings = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/bill/getBookings");
+      const response = await fetch(`http://localhost:3000/api/bill/getBookings`);
       const jsonData = await response.json();
 
       if (Array.isArray(jsonData)) {
@@ -34,7 +34,7 @@ const Homepage = () => {
 
   const getOrders = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/bill/displayAllBill");
+      const response = await fetch(`http://localhost:3000/api/bill/displayAllBill`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -141,24 +141,87 @@ const Homepage = () => {
       });
       
       if (response.ok) {
-        //toast.success("Bill created successfully!");
       } else {
-        //toast.error("Failed to create bill.");
         console.error("Error creating bill:", response.statusText);
       }
     } catch (err) {
-      //toast.error("Error creating bill.");
       console.error("Error creating bill:", err);
     }
   };
+
+  const inventoryUpdate = async (id) => {
+    try {
+        // Fetch the ordered items
+        const response = await fetch(`http://localhost:3000/api/bill/displayItems/${id}`);
+        const data = await response.json();
+        const { items_ordered } = data;
+        console.log(items_ordered);
+
+        if (!items_ordered || !items_ordered.length) {
+            console.error("No items ordered found");
+            return;
+        }
+
+        // Loop through each ordered item
+        for (const item of items_ordered) {
+            // Extract item description and quantity from the string
+            const itemDescriptionMatch = item.match(/item_description: (.+?) item_size:/);
+            const quantityMatch = item.match(/quantity: (\d+)/);
+            console.log(itemDescriptionMatch, quantityMatch);
+
+            if (itemDescriptionMatch && quantityMatch) {
+                const itemDescription = itemDescriptionMatch[1].trim();
+                const quantity = parseInt(quantityMatch[1]);
+
+                // Update inventory by adding quantity
+                console.log(itemDescription, quantity);
+                await updateInventory(itemDescription, quantity);
+            } else {
+                console.error(`Invalid item format: ${item}`);
+            }
+        }
+    } catch (error) {
+        console.error("Error updating inventory:", error);
+    }
+};
+
+
+// Function to call the updateQuantity API
+const updateInventory = async (itemDescription, quantity) => {
+    try {
+       
+        const response = await fetch(`http://localhost:3000/api/bill/updateQuantity`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                item_description: itemDescription,
+                quantity: quantity
+            })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            console.error(`Failed to update inventory for ${itemDescription}: ${result.error}`);
+        } else {
+            console.log(`Successfully updated ${itemDescription}:`, result);
+        }
+    } catch (error) {
+        console.error(`Error updating inventory for ${itemDescription}:`, error);
+    }
+};
+
   const finalProgram = async(id) =>{
     editInvoiceDate(id);
     createBill(id);
     editItemsStatus(id);
+
   };
   const finalProgram2 = async(id) =>{
     handleCreateBill(id);
     editItemsStatusR(id);
+    inventoryUpdate(id);
   };
 
   const handleSearchBookings = (e) => {
@@ -185,39 +248,79 @@ const Homepage = () => {
 
   const handleDeleteBookings = async () => {
     try {
-      const deleteRequests = selectedBookings.map(id =>
-        fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
-          method: "DELETE",
-        })
-      );
+        // Loop through each selected booking
+        for (const id of selectedBookings) {
+            // Fetch the items associated with the booking to identify what to update
+            const response = await fetch(`http://localhost:3000/api/bill/displayItems/${id}`);
+            const data = await response.json();
+            const { items_ordered } = data;
+            console.log(data)
+            if (items_ordered && items_ordered.length > 0) {
+                // Delete the booking
+                await fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
+                    method: "DELETE",
+                });
 
-      await Promise.all(deleteRequests);
-      //toast.success("Selected bookings deleted successfully!");
-      setSelectedBookings([]);
-      getBookings();
+                // Update the inventory for each item
+                for (const item of items_ordered) {
+                    const itemDescriptionMatch = item.match(/item_description: (.+?) item_size:/);
+                    const quantityMatch = item.match(/quantity: (\d+)/);
+
+                    if (itemDescriptionMatch && quantityMatch) {
+                        const itemDescription = itemDescriptionMatch[1].trim();
+                        const quantity = parseInt(quantityMatch[1]);
+
+                        // Increase the inventory by 1 for each deleted item
+                        await updateInventory(itemDescription, quantity);
+                    }
+                }
+            }
+        }
+
+        // Reset selected bookings and refresh bookings list
+        setSelectedBookings([]);
+        getBookings();
+        // toast.success("Selected bookings deleted successfully!");
     } catch (err) {
-      console.error("Error deleting bookings:", err);
-      //toast.error("Error deleting bookings.");
+        console.error("Error deleting bookings:", err);
+        // toast.error("Error deleting bookings.");
     }
-  };
+};
 
-  const handleDeleteOrders = async () => {
-    try {
-      const deleteRequests = selectedOrders.map(id =>
-        fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
-          method: "DELETE",
-        })
-      );
 
-      await Promise.all(deleteRequests);
-      //toast.success("Selected orders deleted successfully!");
-      setSelectedOrders([]);
-      getOrders();
-    } catch (err) {
-      console.error("Error deleting orders:", err);
-      //toast.error("Error deleting orders.");
-    }
-  };
+const handleDeleteOrders = async () => {
+  try {
+    const updateInventoryRequests = selectedOrders.map(async (id) => {
+      // Fetch associated items for the order
+      const response = await fetch(`http://localhost:3000/api/bill/displayItems/${id}`);
+      const data = await response.json();
+      const { items_ordered } = data;
+
+      if (items_ordered && items_ordered.length) {
+        // Increase the quantity of each item by 1
+        for (const item of items_ordered) {
+          const itemDescriptionMatch = item.match(/item_description: (.*?) item_size/);
+          if (itemDescriptionMatch) {
+            const itemDescription = itemDescriptionMatch[1];
+            await updateInventory(itemDescription, 1);
+          }
+        }
+      }
+      
+      // Proceed to delete the order
+      return fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
+        method: "DELETE",
+      });
+    });
+
+    await Promise.all(updateInventoryRequests);
+    setSelectedOrders([]);
+    getOrders();
+  } catch (err) {
+    console.error("Error deleting orders:", err);
+  }
+};
+
 
   const handleEditBookings = () => {
     navigate('/edit-bookings', { state: { ids: selectedBookings } });
