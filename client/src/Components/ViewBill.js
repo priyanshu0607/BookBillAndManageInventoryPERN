@@ -13,7 +13,7 @@ const ViewBill = () => {
   useEffect(() => {
     const getBill = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/bill/displayAllBill");
+        const response = await fetch(`http://localhost:3000/api/bill/displayAllBill`);
         const billList = await response.json();
 
         if (!billList || !Array.isArray(billList.rows) || billList.rows.length === 0) {
