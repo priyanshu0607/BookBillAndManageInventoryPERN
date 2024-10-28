@@ -8,11 +8,12 @@ const ViewItems = () => {
   const [items, setItems] = useState([]);
   const [editItemId, setEditItemId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
   const navigate = useNavigate();
 
   const getItems = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/bill/items");
+      const response = await fetch(`http://localhost:3000/api/bill/items`);
       const jsonData = await response.json();
 
       if (jsonData && Array.isArray(jsonData.rows)) {
@@ -42,7 +43,6 @@ const ViewItems = () => {
         body: JSON.stringify(editFormData),
       });
 
-      // Update the items list with the edited item
       const updatedItems = items.map((item) =>
         item.item_id === itemId ? editFormData : item
       );
@@ -55,7 +55,7 @@ const ViewItems = () => {
 
   const handleDelete = async (itemId) => {
     try {
-      await fetch(`http://localhost:3000/api/bill/items/delete/${itemId}`, {
+      await fetch(`http://localhost:3000/api/items/delete/${itemId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -77,16 +77,35 @@ const ViewItems = () => {
     });
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   useEffect(() => {
     getItems();
   }, []);
+
+  // Filter items based on search term
+  const filteredItems = items.filter((item) =>
+    item.item_description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Fragment>
       <Sidebar />
       <div className="content">
         <h1 className="text-center mt-3" style={{ fontFamily: 'Times New Roman, Times, serif' }}>View All Items</h1>
-        {items.length > 0 ? (
+        
+        {/* Search bar */}
+        <input
+          type="text"
+          placeholder="Search by description"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="searchB mt-3"
+        />
+
+        {filteredItems.length > 0 ? (
           <table className="table mt-5 text-center">
             <thead>
               <tr>
@@ -99,83 +118,88 @@ const ViewItems = () => {
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
-                <tr key={item.item_id}>
-                  <td>{item.item_id}</td>
-                  <td>
-                    {editItemId === item.item_id ? (
-                      <input
-                        type="text"
-                        name="item_description"
-                        value={editFormData.item_description}
-                        onChange={handleInputChange}
-                      />
-                    ) : (
-                      item.item_description
-                    )}
-                  </td>
-                  <td>
-                    {editItemId === item.item_id ? (
-                      <input
-                        type="text"
-                        name="item_size"
-                        value={editFormData.item_size}
-                        onChange={handleInputChange}
-                      />
-                    ) : (
-                      item.item_size
-                    )}
-                  </td>
-                  <td>
-                    {editItemId === item.item_id ? (
-                      <input
-                        type="number"
-                        name="rate"
-                        value={editFormData.rate}
-                        onChange={handleInputChange}
-                      />
-                    ) : (
-                      item.rate
-                    )}
-                  </td>
-                  <td>
-                    {editItemId === item.item_id ? (
-                      <input
-                        type="number"
-                        name="item_quantity"
-                        value={editFormData.item_quantity}
-                        onChange={handleInputChange}
-                      />
-                    ) : (
-                      item.item_quantity
-                    )}
-                  </td>
-                  <td>
-                    {editItemId === item.item_id ? (
-                      <button
-                        className="btn btn-success action-button"
-                        onClick={() => handleSaveClick(item.item_id)}
-                      >
-                        Save
-                      </button>
-                    ) : (
-                      <button
-                        className="btn btn-warning action-button"
-                        onClick={() => handleEditClick(item)}
-                      >
-                        Edit
-                      </button>
-                    )}
-                    <button
-                      className="btn btn-danger action-button2"
-                      onClick={() => handleDelete(item.item_id)}
-                    >
-                      <i className="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+  {filteredItems.map((item) => (
+    <tr key={item.item_id}>
+      <td>{item.item_id}</td>
+      <td>
+        {editItemId === item.item_id ? (
+          <input
+            type="text"
+            name="item_description"
+            value={editFormData.item_description}
+            onChange={handleInputChange}
+          />
+        ) : (
+          item.item_description
+        )}
+      </td>
+      <td>
+        {editItemId === item.item_id ? (
+          <input
+            type="text"
+            name="item_size"
+            value={editFormData.item_size}
+            onChange={handleInputChange}
+          />
+        ) : (
+          item.item_size
+        )}
+      </td>
+      <td>
+        {editItemId === item.item_id ? (
+          <input
+            type="number"
+            name="rate"
+            value={editFormData.rate}
+            onChange={handleInputChange}
+          />
+        ) : (
+          item.rate
+        )}
+      </td>
+      <td>
+        {editItemId === item.item_id ? (
+          <input
+            type="number"
+            name="item_quantity"
+            value={editFormData.item_quantity}
+            onChange={handleInputChange}
+          />
+        ) : (
+          item.item_quantity === 0 ? (
+            <span style={{ color: "red" }}>Out of Stock</span>
+          ) : (
+            item.item_quantity
+          )
+        )}
+      </td>
+      <td>
+        {editItemId === item.item_id ? (
+          <button
+            className="btn btn-success action-button"
+            onClick={() => handleSaveClick(item.item_id)}
+          >
+            Save
+          </button>
+        ) : (
+          <button
+            className="btn btn-warning action-button"
+            onClick={() => handleEditClick(item)}
+          >
+            Edit
+          </button>
+        )}
+        <button
+          className="btn btn-danger action-button2"
+          onClick={() => handleDelete(item.item_id)}
+        >
+          <i className="fas fa-trash"></i>
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
           </table>
         ) : (
           <p>No items found in inventory.</p>
