@@ -248,78 +248,115 @@ const updateInventory = async (itemDescription, quantity) => {
 
   const handleDeleteBookings = async () => {
     try {
-        // Loop through each selected booking
-        for (const id of selectedBookings) {
-            // Fetch the items associated with the booking to identify what to update
-            const response = await fetch(`http://localhost:3000/api/bill/displayItems/${id}`);
-            const data = await response.json();
-            const { items_ordered } = data;
-            console.log(data)
-            if (items_ordered && items_ordered.length > 0) {
-                // Delete the booking
-                await fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
-                    method: "DELETE",
-                });
-
-                // Update the inventory for each item
-                for (const item of items_ordered) {
-                    const itemDescriptionMatch = item.match(/item_description: (.+?) item_size:/);
-                    const quantityMatch = item.match(/quantity: (\d+)/);
-
-                    if (itemDescriptionMatch && quantityMatch) {
-                        const itemDescription = itemDescriptionMatch[1].trim();
-                        const quantity = parseInt(quantityMatch[1]);
-
-                        // Increase the inventory by 1 for each deleted item
-                        await updateInventory(itemDescription, quantity);
-                    }
-                }
+      const itemQuantities = {}; // Dictionary to accumulate quantities
+  
+      // First loop: fetch and accumulate quantities for each item description
+      for (const id of selectedBookings) {
+        const response = await fetch(`http://localhost:3000/api/bill/displayItems/${id}`);
+        const data = await response.json();
+        console.log(`Booking ID: ${id}, Items Ordered:`, data.items_ordered);
+        const { items_ordered } = data;
+  
+        if (items_ordered && items_ordered.length > 0) {
+          // Accumulate quantities for each item description
+          for (const item of items_ordered) {
+            const itemDescriptionMatch = item.match(/item_description: (.+?) item_size:/);
+            const quantityMatch = item.match(/quantity: (\d+)/);
+  
+            if (itemDescriptionMatch && quantityMatch) {
+              const itemDescription = itemDescriptionMatch[1].trim();
+              const quantity = parseInt(quantityMatch[1]);
+  
+              // Accumulate quantity for each unique item description
+              if (itemQuantities[itemDescription]) {
+                itemQuantities[itemDescription] += quantity;
+              } else {
+                itemQuantities[itemDescription] = quantity;
+              }
             }
+          }
+        } else {
+          console.error(`No items ordered for Booking ID: ${id}`);
         }
-
-        // Reset selected bookings and refresh bookings list
-        setSelectedBookings([]);
-        getBookings();
-        // toast.success("Selected bookings deleted successfully!");
+      }
+  
+      // Second loop: Update inventory for each unique item description
+      for (const [itemDescription, quantity] of Object.entries(itemQuantities)) {
+        console.log(`Updating inventory for ${itemDescription} with quantity: ${quantity}`);
+        await updateInventory(itemDescription, quantity);
+      }
+  
+      // Delete each booking after inventory updates
+      const deleteRequests = selectedBookings.map((id) =>
+        fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
+          method: "DELETE",
+        })
+      );
+  
+      await Promise.all(deleteRequests);
+      setSelectedBookings([]);
+      getBookings(); // Refresh bookings list after deletion
     } catch (err) {
-        console.error("Error deleting bookings:", err);
-        // toast.error("Error deleting bookings.");
+      console.error("Error deleting bookings:", err);
     }
-};
+  };
 
 
 const handleDeleteOrders = async () => {
   try {
-    const updateInventoryRequests = selectedOrders.map(async (id) => {
-      // Fetch associated items for the order
+    const itemQuantities = {}; // Dictionary to accumulate quantities
+
+    // First loop: fetch and accumulate quantities for each item description
+    for (const id of selectedOrders) {
       const response = await fetch(`http://localhost:3000/api/bill/displayItems/${id}`);
       const data = await response.json();
+      console.log(`Order ID: ${id}, Items Ordered:`, data.items_ordered);
       const { items_ordered } = data;
 
       if (items_ordered && items_ordered.length) {
-        // Increase the quantity of each item by 1
         for (const item of items_ordered) {
-          const itemDescriptionMatch = item.match(/item_description: (.*?) item_size/);
-          if (itemDescriptionMatch) {
-            const itemDescription = itemDescriptionMatch[1];
-            await updateInventory(itemDescription, 1);
+          const match = item.match(/item_description: (.*?)\sitem_size: \d+\squantity: (\d+)\srate:/);
+          if (match) {
+            const itemDescription = match[1].trim();
+            const quantity = parseInt(match[2], 10);
+
+            // Accumulate quantity for each unique item description
+            if (itemQuantities[itemDescription]) {
+              itemQuantities[itemDescription] += quantity;
+            } else {
+              itemQuantities[itemDescription] = quantity;
+            }
+          } else {
+            console.error(`Failed to extract item description and quantity for item: ${item}`);
           }
         }
+      } else {
+        console.error(`No items ordered for Order ID: ${id}`);
       }
-      
-      // Proceed to delete the order
-      return fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
-        method: "DELETE",
-      });
-    });
+    }
 
-    await Promise.all(updateInventoryRequests);
+    // Second loop: Update inventory for each unique item description
+    for (const [itemDescription, quantity] of Object.entries(itemQuantities)) {
+      console.log(`Updating inventory for ${itemDescription} with quantity: ${quantity}`);
+      await updateInventory(itemDescription, quantity);
+    }
+
+    // Delete each bill after inventory updates
+    const deleteRequests = selectedOrders.map((id) =>
+      fetch(`http://localhost:3000/api/bill/deleteBill/${id}`, {
+        method: "DELETE",
+      })
+    );
+
+    await Promise.all(deleteRequests);
     setSelectedOrders([]);
-    getOrders();
+    getOrders(); // Refresh orders list after deletion
   } catch (err) {
     console.error("Error deleting orders:", err);
   }
 };
+
+
 
 
   const handleEditBookings = () => {
