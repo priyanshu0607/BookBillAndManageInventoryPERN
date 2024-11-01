@@ -165,10 +165,6 @@ const CreateBill = () => {
             console.error(`Error adjusting inventory for ${itemDescription}:`, err.message);
         }
     };
- 
-    
-
-    
     return (
         <Fragment>
             <Sidebar></Sidebar>
