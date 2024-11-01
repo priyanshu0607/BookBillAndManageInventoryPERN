@@ -21,6 +21,7 @@ const EditBill = () => {
   });
   const [itemsOrdered, setItemsOrdered] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [originalItems, setOriginalItems] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const { ids } = location.state || { ids: [] };
@@ -31,18 +32,18 @@ const EditBill = () => {
     } else {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids]);
 
   const fetchBillData = async (id) => {
     try {
       const response = await fetch(`http://localhost:3000/api/bill/displayBill/${id}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      
       const jsonData = await response.json();
       setBillData(jsonData);
-      setItemsOrdered(parseItemsOrdered(jsonData.items_ordered));
+      const items = parseItemsOrdered(jsonData.items_ordered);
+      setItemsOrdered(items);
+      setOriginalItems(items);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching bill data:", err);
@@ -56,19 +57,17 @@ const EditBill = () => {
       console.error("Invalid items array:", itemsArray);
       return [];
     }
-
     return itemsArray.map(itemStr => {
       const itemParts = itemStr.match(/item_description:\s*([^,]+)\s*item_size:\s*(\d+)\s*quantity:\s*(\d+)\s*rate:\s*(\d+\.?\d*)/);
       if (!itemParts) {
         console.error("Invalid item string format:", itemStr);
         return null;
       }
-
       const item_description = itemParts[1].trim();
       const item_size = parseInt(itemParts[2].trim(), 10);
       const quantity = parseInt(itemParts[3].trim(), 10);
       const rate = parseFloat(itemParts[4].trim());
-      const rateOfOne = rate/quantity;
+      const rateOfOne = rate / quantity;
       const totalrate = quantity * rateOfOne;
 
       return { item_description, item_size, quantity, rateOfOne, totalrate };
@@ -87,10 +86,7 @@ const EditBill = () => {
     const { name, value } = e.target;
     const updatedItems = itemsOrdered.map((item, i) => {
       if (i === index) {
-        const updatedItem = {
-          ...item,
-          [name]: value,
-        };
+        const updatedItem = { ...item, [name]: value };
         if (name === "quantity" || name === "rate") {
           const quantity = name === "quantity" ? parseInt(value, 10) : item.quantity;
           const rate = name === "rate" ? parseFloat(value) : item.rateOfOne;
@@ -111,16 +107,67 @@ const EditBill = () => {
       total_amount: totalAmount,
     }));
   };
-  
+
+  const updateInventory = async (itemDescription, quantity) => {
+    try {
+        console.log(`Updating inventory for ${itemDescription}: Adjusting quantity by ${quantity}`);
+        
+        const response = await fetch(`http://localhost:3000/api/bill/updateQuantity`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_description: itemDescription, quantity: quantity })
+        });
+
+        if (!response.ok) {
+            const result = await response.json();
+            console.error(`Failed to update inventory for ${itemDescription}: ${result.error}`);
+        } else {
+            console.log(`Successfully updated ${itemDescription}.`);
+        }
+    } catch (error) {
+        console.error(`Error updating inventory for ${itemDescription}:`, error);
+    }
+};
+
+
+  const updateInventoryForChanges = async (original, updated) => {
+    const originalMap = new Map(original.map(item => [item.item_description, item]));
+    const updatedMap = new Map(updated.map(item => [item.item_description, item]));
+
+    // Adjust for updated or deleted items
+    for (const [desc, originalItem] of originalMap.entries()) {
+      const updatedItem = updatedMap.get(desc);
+      if (updatedItem) {
+        const quantityDiff = updatedItem.quantity - originalItem.quantity;
+        if (quantityDiff !== 0) {
+          await updateInventory(desc, -quantityDiff);
+        }
+        updatedMap.delete(desc); // Remove item after processing
+      } else {
+        // If item is deleted, add its quantity back to inventory
+        await updateInventory(desc, originalItem.quantity);
+      }
+    }
+
+    // Adjust for newly added items in updatedMap
+    for (const [desc, newItem] of updatedMap.entries()) {
+      await updateInventory(desc, -newItem.quantity);
+    }
+  };
+
   const handleEdit = async () => {
     try {
-      // Convert itemsOrdered back to array of strings
-      const itemsStringArray = itemsOrdered.map(item => `item_description:${item.item_description} item_size:${item.item_size} quantity:${item.quantity} rate:${item.totalrate}`);
+      await updateInventoryForChanges(originalItems, itemsOrdered);
+      
+      const itemsStringArray = itemsOrdered.map(item => 
+        `item_description: ${item.item_description} item_size: ${item.item_size} quantity: ${item.quantity} rate:${item.totalrate}`
+      );
+      console.log(itemsStringArray)
       const updatedBillData = {
         ...billData,
         items_ordered: itemsStringArray
       };
-      console.log(updatedBillData)
+
       const response = await fetch(`http://localhost:3000/api/bill/updateBooking/${updatedBillData.bill_id}`, {
         method: "PUT",
         headers: {
@@ -128,6 +175,7 @@ const EditBill = () => {
         },
         body: JSON.stringify(updatedBillData),
       });
+
       if (response.ok) {
         toast.success("Bill updated successfully!");
         navigate("/"); // Navigate back to homepage
@@ -140,31 +188,40 @@ const EditBill = () => {
     }
   };
 
-  const handleDeleteItem = (index) => {
+  const handleDeleteItem = async (index) => {
+    const deletedItem = itemsOrdered[index];
     const updatedItems = [...itemsOrdered];
     updatedItems.splice(index, 1);
+
     setItemsOrdered(updatedItems);
     updateTotalAmount(updatedItems);
-  };
+
+    console.log(`Deleting item: ${deletedItem.item_description}, Quantity to add back: ${deletedItem.quantity}`);
+
+    // Await to ensure the inventory update completes for debugging
+    await updateInventory(deletedItem.item_description, deletedItem.quantity-1);
+    console.log(`Inventory updated for deletion: ${deletedItem.item_description}`);
+};
+
+
 
   const handleAddItem = (selectedItem) => {
     const newItem = {
       item_description: selectedItem.item_description,
       item_size: selectedItem.item_size,
-      quantity: 1, // Default quantity
+      quantity: 1,
       rateOfOne: selectedItem.rate,
-      totalrate: selectedItem.rate * 1, // Initial total rate based on default quantity
+      totalrate: selectedItem.rate * 1,
     };
     
     const updatedItems = [...itemsOrdered, newItem];
     setItemsOrdered(updatedItems);
     updateTotalAmount(updatedItems);
   };
-  
 
   const onSelectItem = (selectedItem) => {
     handleAddItem(selectedItem);
-};
+  };
   return (
     <div>
       <ToastContainer />
