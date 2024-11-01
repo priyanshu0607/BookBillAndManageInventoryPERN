@@ -8,7 +8,8 @@ const ViewItems = () => {
   const [items, setItems] = useState([]);
   const [editItemId, setEditItemId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
-  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
+  const [searchTerm, setSearchTerm] = useState(""); // Search term for description
+  const [sizeSearchTerm, setSizeSearchTerm] = useState(""); // New state for size search term
   const navigate = useNavigate();
 
   const getItems = async () => {
@@ -55,7 +56,7 @@ const ViewItems = () => {
 
   const handleDelete = async (itemId) => {
     try {
-      await fetch(`http://localhost:3000/api/items/delete/${itemId}`, {
+      await fetch(`http://localhost:3000/api/bill/items/delete/${itemId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -81,13 +82,19 @@ const ViewItems = () => {
     setSearchTerm(e.target.value);
   };
 
+  const handleSizeSearchChange = (e) => {
+    setSizeSearchTerm(e.target.value);
+  };
+
   useEffect(() => {
     getItems();
   }, []);
 
-  // Filter items based on search term
-  const filteredItems = items.filter((item) =>
-    item.item_description.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter items based on search term and size term
+  const filteredItems = items.filter(
+    (item) =>
+      item.item_description.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      item.item_size.toString().includes(sizeSearchTerm)
   );
 
   return (
@@ -96,14 +103,23 @@ const ViewItems = () => {
       <div className="content">
         <h1 className="text-center mt-3" style={{ fontFamily: 'Times New Roman, Times, serif' }}>View All Items</h1>
         
-        {/* Search bar */}
-        <input
-          type="text"
-          placeholder="Search by description"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="searchB mt-3"
-        />
+        {/* Search bars */}
+        <div className="d-flex justify-content-center mt-3">
+          <input
+            type="text"
+            placeholder="Search by description"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="searchB mr-2"
+          />
+          <input
+            type="text"
+            placeholder="Search by size"
+            value={sizeSearchTerm}
+            onChange={handleSizeSearchChange}
+            className="searchB"
+          />
+        </div>
 
         {filteredItems.length > 0 ? (
           <table className="table mt-5 text-center">
@@ -118,97 +134,96 @@ const ViewItems = () => {
               </tr>
             </thead>
             <tbody>
-  {filteredItems.map((item) => (
-    <tr key={item.item_id}>
-      <td>{item.item_id}</td>
-      <td>
-        {editItemId === item.item_id ? (
-          <input
-            type="text"
-            name="item_description"
-            value={editFormData.item_description}
-            onChange={handleInputChange}
-          />
-        ) : (
-          item.item_description
-        )}
-      </td>
-      <td>
-        {editItemId === item.item_id ? (
-          <input
-            type="text"
-            name="item_size"
-            value={editFormData.item_size}
-            onChange={handleInputChange}
-          />
-        ) : (
-          item.item_size
-        )}
-      </td>
-      <td>
-        {editItemId === item.item_id ? (
-          <input
-            type="number"
-            name="rate"
-            value={editFormData.rate}
-            onChange={handleInputChange}
-          />
-        ) : (
-          item.rate
-        )}
-      </td>
-      <td>
-        {editItemId === item.item_id ? (
-          <input
-            type="number"
-            name="item_quantity"
-            value={editFormData.item_quantity}
-            onChange={handleInputChange}
-          />
-        ) : (
-          item.item_quantity === 0 ? (
-            <span style={{ color: "red" }}>Out of Stock</span>
-          ) : (
-            item.item_quantity
-          )
-        )}
-      </td>
-      <td>
-        {editItemId === item.item_id ? (
-          <button
-            className="btn btn-success action-button"
-            onClick={() => handleSaveClick(item.item_id)}
-          >
-            Save
-          </button>
-        ) : (
-          <button
-            className="btn btn-warning action-button"
-            onClick={() => handleEditClick(item)}
-          >
-            Edit
-          </button>
-        )}
-        <button
-          className="btn btn-danger action-button2"
-          onClick={() => handleDelete(item.item_id)}
-        >
-          <i className="fas fa-trash"></i>
-        </button>
-      </td>
-    </tr>
-  ))}
-</tbody>
-
+              {filteredItems.map((item) => (
+                <tr key={item.item_id}>
+                  <td>{item.item_id}</td>
+                  <td>
+                    {editItemId === item.item_id ? (
+                      <input
+                        type="text"
+                        name="item_description"
+                        value={editFormData.item_description}
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      item.item_description
+                    )}
+                  </td>
+                  <td>
+                    {editItemId === item.item_id ? (
+                      <input
+                        type="text"
+                        name="item_size"
+                        value={editFormData.item_size}
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      item.item_size
+                    )}
+                  </td>
+                  <td>
+                    {editItemId === item.item_id ? (
+                      <input
+                        type="number"
+                        name="rate"
+                        value={editFormData.rate}
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      item.rate
+                    )}
+                  </td>
+                  <td>
+                    {editItemId === item.item_id ? (
+                      <input
+                        type="number"
+                        name="item_quantity"
+                        value={editFormData.item_quantity}
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      item.item_quantity === 0 ? (
+                        <span style={{ color: "red" }}>Out of Stock</span>
+                      ) : (
+                        item.item_quantity
+                      )
+                    )}
+                  </td>
+                  <td>
+                    {editItemId === item.item_id ? (
+                      <button
+                        className="btn btn-success action-button"
+                        onClick={() => handleSaveClick(item.item_id)}
+                      >
+                        Save
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-warning action-button"
+                        onClick={() => handleEditClick(item)}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      className="btn btn-danger action-button2"
+                      onClick={() => handleDelete(item.item_id)}
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         ) : (
           <p>No items found in inventory.</p>
         )}
         <button
           className="btn btn-secondary mt-3"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/inventory')}
         >
-          Back
+          Add Inventory
         </button>
       </div>
     </Fragment>
