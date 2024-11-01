@@ -33,7 +33,7 @@ const ItemForm = ({ addItem }) => {
                 const result = await response.json();
                 console.log('Form submitted successfully:', result);
                 clearForm();
-                navigate('/'); // Redirect after successful submission
+                navigate('/inventory'); // Redirect after successful submission
             } catch (error) {
                 console.error('Error submitting form:', error);
             }
@@ -62,7 +62,7 @@ const ItemForm = ({ addItem }) => {
                 const result = await response.json();
                 console.log('Form submitted successfully:', result);
                 clearForm();
-                navigate('/'); // Redirect after successful submission
+                navigate('/inventory'); // Redirect after successful submission
             } catch (error) {
                 console.error('Error submitting form:', error);
             }
@@ -191,14 +191,29 @@ const ItemForm = ({ addItem }) => {
                             />
                         </div>
                     )}
-                    <div className="text-center">
-                        <button type="submit" className="btn btn-primary">
-                            {formMode === 'single' ? 'Add Item' : 'Upload Items'}
-                        </button>
-                        <button type="button" className="btn btn-secondary ml-3" onClick={() => navigate('/')}>
-                            Cancel
-                        </button>
-                    </div>
+                    <div className="text-center d-flex justify-content-center mt-3">
+                            <button type="submit" className="btn btn-primary mx-2">
+                                {formMode === 'single' ? 'Add Item' : 'Upload Items'}
+                             </button>
+                            <button
+                                type="button"
+                                className="btn btn-secondary mx-2"
+                                onClick={() => {
+                                clearForm();
+                                navigate('/inventory');
+                    }}
+                >
+        Cancel
+    </button>
+    <button
+        type="button"
+        className="btn btn-info mx-2"
+        onClick={() => navigate('/inventoryManagement')}
+    >
+        Inventory Management
+    </button>
+</div>
+
                 </form>
             </div>
         </Fragment>
@@ -206,5 +221,3 @@ const ItemForm = ({ addItem }) => {
 };
 
 export default ItemForm;
-
-
