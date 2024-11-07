@@ -31,6 +31,7 @@
 .table td {
     background-color: #f2f2f2;
 }
+/*top dog*/
 .btn-primary {
     background-color: #007bff;
     border: none;
@@ -40,7 +41,8 @@
     text-decoration: none;
     display: inline-block;
     font-size: 14px;
-    margin: 4px 2px;
+    margin-top:0;
+    margin-bottom: 0;
     cursor: pointer;
 }
 .search-container {
