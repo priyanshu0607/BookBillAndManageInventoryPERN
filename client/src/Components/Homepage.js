@@ -411,7 +411,7 @@ const handleDeleteOrders = async () => {
                     <th>Booking ID</th>
                     <th>Customer Name</th>
                     <th>Customer Phone</th>
-                    <th>Booking Date</th>
+                    <th>PickUp Date</th>
                     <th>Return Date</th>
                     <th>Total Amount</th>
                     <th>Status</th>
@@ -475,7 +475,7 @@ const handleDeleteOrders = async () => {
                     <th>Bill ID</th>
                     <th>Customer Name</th>
                     <th>Customer Phone</th>
-                    <th>Booking Date</th>
+                    <th>Pickup Date</th>
                     <th>Return Date</th>
                     <th>Total Amount</th>
                     <th>Status</th>
