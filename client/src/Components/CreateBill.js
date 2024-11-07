@@ -11,6 +11,7 @@ const CreateBill = () => {
     const [returnDate, setReturnDate] = useState('');
     const [advanceAmount, setAdvanceAmount] = useState('');
     const [advanceAmountPaid, setAdvanceAmountPaid] = useState('');
+    const [isAdvancePaidInFull, setIsAdvancePaidInFull] = useState(false);
     const [onlineOfflineMode, setOnlineOfflineMode] = useState('online');
     const [discount, setDiscount] = useState('');
     const [totalAmount, setTotalAmount] = useState(0);
@@ -62,6 +63,25 @@ const CreateBill = () => {
 
     const validateForm = () => {
         setIsFormValid(validateInputs());
+    };
+    const handleAdvanceAmountChange = (e) => {
+        setAdvanceAmount(e.target.value);
+
+        // If checkbox is checked, set advanceAmountPaid to the new advanceAmount
+        if (isAdvancePaidInFull) {
+            setAdvanceAmountPaid(e.target.value);
+        }
+    };
+
+    const handleAdvancePaidInFullChange = () => {
+        setIsAdvancePaidInFull(!isAdvancePaidInFull);
+
+        // Set advanceAmountPaid to advanceAmount if checked, otherwise clear it
+        if (!isAdvancePaidInFull) {
+            setAdvanceAmountPaid(advanceAmount);
+        } else {
+            setAdvanceAmountPaid('');
+        }
     };
 
     const onSubmitForm = async (e) => {
@@ -219,7 +239,7 @@ const CreateBill = () => {
                             type="number"
                             className="form-control"
                             value={advanceAmount}
-                            onChange={(e) => setAdvanceAmount(e.target.value)}
+                            onChange={handleAdvanceAmountChange}
                         />
                         {errors.advanceAmount && <small className="text-danger">{errors.advanceAmount}</small>}
                     </div>
@@ -230,8 +250,18 @@ const CreateBill = () => {
                             className="form-control"
                             value={advanceAmountPaid}
                             onChange={(e) => setAdvanceAmountPaid(e.target.value)}
+                            disabled={isAdvancePaidInFull}
                         />
                         {errors.advanceAmountPaid && <small className="text-danger">{errors.advanceAmountPaid}</small>}
+                        <div className="form-check mt-2">
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={isAdvancePaidInFull}
+                                onChange={handleAdvancePaidInFullChange}
+                            />
+                            <label className="form-check-label">Check if advance amount paid in full</label>
+                        </div>
                     </div>
                 </div>
                 <div className="form-row">
