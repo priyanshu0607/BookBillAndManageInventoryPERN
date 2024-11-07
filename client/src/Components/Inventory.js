@@ -197,7 +197,7 @@ const ItemForm = ({ addItem }) => {
                              </button>
                             <button
                                 type="button"
-                                className="btn btn-secondary mx-2"
+                                className="btn btn-secondary"
                                 onClick={() => {
                                 clearForm();
                                 navigate('/inventory');
