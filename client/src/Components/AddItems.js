@@ -37,7 +37,7 @@ const AddItems = ({ getTotalAmount, getSelectedItems }) => {
         };
 
         calculateTotalAmount();
-    }, [displayedItems, getTotalAmount, getSelectedItems]); // Depend on displayedItems, getTotalAmount, getSelectedItems
+    }, [displayedItems, getTotalAmount, getSelectedItems]);
 
     const handleChange = (event) => {
         const value = event.target.value;
@@ -53,6 +53,20 @@ const AddItems = ({ getTotalAmount, getSelectedItems }) => {
             setFilteredItems([]);
             setShowDropdown(false);
         }
+    };
+
+    const addNewItem = () => {
+        const newItem = {
+            id: Math.random(), // Generate a unique ID
+            item_description: searchTerm,
+            item_size: '', // Editable field
+            rate: 0, // Editable field
+            quantity: 1,
+            totalRate: 0 // Calculated as rate * quantity
+        };
+        setDisplayedItems(prevDisplayedItems => [...prevDisplayedItems, newItem]);
+        setSearchTerm(''); // Clear search term
+        setShowDropdown(false); // Hide dropdown
     };
 
     const handleItemClick = (item) => {
@@ -73,11 +87,15 @@ const AddItems = ({ getTotalAmount, getSelectedItems }) => {
 
     const handleAddButtonClick = (event) => {
         event.preventDefault();
-        setDisplayedItems(prevDisplayedItems => [...prevDisplayedItems, ...selectedItems]);
-        setSelectedItems([]); // Clear selectedItems after adding
-        setSearchTerm(''); // Clear search term after adding
-        setFilteredItems([]); // Clear filtered items after adding
-        setShowDropdown(false); // Hide dropdown after adding
+        if (!items.some(item => item.item_description === searchTerm) && searchTerm.trim() !== '') {
+            addNewItem(); // Add new item if not found in fetched items
+        } else {
+            setDisplayedItems(prevDisplayedItems => [...prevDisplayedItems, ...selectedItems]);
+            setSelectedItems([]); // Clear selectedItems after adding
+            setSearchTerm(''); // Clear search term
+            setFilteredItems([]); // Clear filtered items
+            setShowDropdown(false); // Hide dropdown
+        }
     };
 
     const handleQuantityChange = (index, newQuantity) => {
@@ -92,20 +110,26 @@ const AddItems = ({ getTotalAmount, getSelectedItems }) => {
         setDisplayedItems(updatedItems);
     };
 
+    const handleSizeChange = (index, newSize) => {
+        const updatedItems = [...displayedItems];
+        updatedItems[index] = { ...updatedItems[index], item_size: newSize };
+        setDisplayedItems(updatedItems);
+    };
+
     return (
         <div className="container">
-            <div className='d-flex align-items-center mb-4 '>
-                <div style={{ position: 'relative', width: '600px'}}>
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={handleChange}
-                        onFocus={() => setShowDropdown(true)}
-                        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-                        placeholder="Type to add..."
-                        className="form-control"
-                        style={{ width: '100%' }}
-                    />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div style={{ position: 'relative', width: '100%' }}>
+        <input
+            type="text"
+            value={searchTerm}
+            onChange={handleChange}
+            onFocus={() => setShowDropdown(true)}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+            placeholder="Type to add..."
+            className="form-control"
+            style={{ width: '100%', height: '2.5rem' }}
+        />
                     {showDropdown && (
                         <ul className="dropdown-menu show" style={{ width: '100%', position: 'absolute', zIndex: 1 }}>
                             {filteredItems.map((item) => (
@@ -120,7 +144,15 @@ const AddItems = ({ getTotalAmount, getSelectedItems }) => {
                         </ul>
                     )}
                 </div>
-                <button type="button" onClick={handleAddButtonClick} className="btn btn-primary ml-2">Add Items</button>
+                <button onClick={handleAddButtonClick}
+        className="btn1 btn-primary"
+        style={{
+            height: '3rem',
+            padding: '0 20px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            borderRadius: '5px'
+        }}>Add Items</button>
             </div>
             {selectedItems.length > 0 && (
                 <div className="mt-2">
@@ -144,7 +176,14 @@ const AddItems = ({ getTotalAmount, getSelectedItems }) => {
                             {displayedItems.map((item, index) => (
                                 <tr key={item.id}>
                                     <td>{item.item_description}</td>
-                                    <td>{item.item_size}</td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            value={item.item_size}
+                                            onChange={(e) => handleSizeChange(index, e.target.value)}
+                                            className="form-control"
+                                        />
+                                    </td>
                                     <td>
                                         <input
                                             type="number"
