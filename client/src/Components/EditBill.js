@@ -40,6 +40,19 @@ const EditBill = () => {
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       
       const jsonData = await response.json();
+  
+      // Helper function to convert UTC date to IST date in YYYY-MM-DD format
+      const toISTDateString = (utcDate) => {
+        const date = new Date(utcDate);
+        date.setHours(date.getHours() + 5); // add 5 hours
+        date.setMinutes(date.getMinutes() + 30); // add 30 minutes for IST
+        return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      };
+  
+      // Convert the UTC dates from the server to IST
+      jsonData.booking_date = jsonData.booking_date ? toISTDateString(jsonData.booking_date) : '';
+      jsonData.return_date = jsonData.return_date ? toISTDateString(jsonData.return_date) : '';
+  
       setBillData(jsonData);
       const items = parseItemsOrdered(jsonData.items_ordered);
       setItemsOrdered(items);
@@ -51,6 +64,21 @@ const EditBill = () => {
       setLoading(false);
     }
   };
+  
+  const handleAddNewItem = () => {
+    const newItem = {
+      item_description: '',
+      item_size: 0,
+      quantity: 1,
+      rateOfOne: 0,
+      totalrate: 0,
+      isNew: true
+    };
+    const updatedItems = [...itemsOrdered, newItem];
+    setItemsOrdered(updatedItems);
+    updateTotalAmount(updatedItems);
+  };
+  
 
   const parseItemsOrdered = (itemsArray) => {
     if (!itemsArray || !Array.isArray(itemsArray)) {
@@ -76,22 +104,33 @@ const EditBill = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setBillData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    
+    // Set the date in a consistent format (YYYY-MM-DD) when updating the state
+    if (name === "booking_date" || name === "return_date") {
+      setBillData((prevData) => ({
+        ...prevData,
+        [name]: value, // Directly use the date string from input without modifications
+      }));
+    } else {
+      setBillData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
   };
+  
 
   const handleItemChange = (index, e) => {
     const { name, value } = e.target;
     const updatedItems = itemsOrdered.map((item, i) => {
       if (i === index) {
         const updatedItem = { ...item, [name]: value };
-        if (name === "quantity" || name === "rate") {
-          const quantity = name === "quantity" ? parseInt(value, 10) : item.quantity;
-          const rate = name === "rate" ? parseFloat(value) : item.rateOfOne;
-          updatedItem.totalrate = quantity * rate;
-        }
+        
+        // Recalculate totalrate if rate or quantity changes
+        const quantity = name === "quantity" ? parseInt(value, 10) : item.quantity;
+        const rate = name === "rateOfOne" ? parseFloat(value) : item.rateOfOne;
+        
+        updatedItem.totalrate = quantity * rate;
         return updatedItem;
       }
       return item;
@@ -222,6 +261,9 @@ const EditBill = () => {
   const onSelectItem = (selectedItem) => {
     handleAddItem(selectedItem);
   };
+
+
+  
   return (
     <div>
       <ToastContainer />
@@ -336,7 +378,11 @@ const EditBill = () => {
 
               <div className="form-group">
                 <h3>Items Ordered</h3>
-                <SearchDropdown onSelectItem={onSelectItem}></SearchDropdown>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <SearchDropdown onSelectItem={onSelectItem} />
+                  <button className="btn2 btn-success ml-2" 
+                   onClick={handleAddNewItem}>Add New Item</button>
+                </div>
                 <table className="table table-bordered mt-3">
                   <thead>
                     <tr>
@@ -349,29 +395,61 @@ const EditBill = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {itemsOrdered.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.item_description}</td>
-                        <td>{item.item_size}</td>
-                        <td>{item.rateOfOne}</td>
-                        <td>
+                  {itemsOrdered.map((item, index) => (
+                    <tr key={index}>
+                      <td>
+                        {item.isNew ? (
                           <input
-                            type="number"
-                            name="quantity"
-                            value={item.quantity}
-                            onChange={(e) => handleItemChange(index, e)}
-                            className="form-control"
-                          />
-                        </td>
-                        <td>{item.totalrate}</td>
-                        <td>
-                          <button className="btn btn-danger" onClick={() => handleDeleteItem(index)}>Delete</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                              type="text"
+                              name="item_description"
+                              value={item.item_description}
+                              onChange={(e) => handleItemChange(index, e)}
+                              className="form-control"
+                            />
+                                ) : (
+                                  item.item_description
+                                )}
+                              </td>
+                              <td>
+                                {item.isNew ? (
+                                  <input
+                                    type="number"
+                                    name="item_size"
+                                    value={item.item_size}
+                                    onChange={(e) => handleItemChange(index, e)}
+                                    className="form-control"
+                                  />
+                                ) : (
+                                  item.item_size
+                                )}
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  name="rateOfOne"
+                                  value={item.rateOfOne}
+                                  onChange={(e) => handleItemChange(index, e)}
+                                  className="form-control"
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  name="quantity"
+                                  value={item.quantity}
+                                  onChange={(e) => handleItemChange(index, e)}
+                                  className="form-control"
+                                />
+                              </td>
+                              <td>{item.totalrate}</td>
+                              <td>
+                                <button className="btn btn-danger" onClick={() => handleDeleteItem(index)}>Delete</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
                 </table>
-              </div>
+                                      </div>
 
               <div className="form-group">
                 <label>Total Amount:</label>
