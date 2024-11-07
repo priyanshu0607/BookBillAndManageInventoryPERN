@@ -149,7 +149,7 @@ const ViewBillAfterBooking = () => {
               <div className="bill-detail-row">
                 <p><span>Name:</span> {bill.customer_name}</p>
                 <p><span>Mobile Number:</span> {bill.customer_mobile_number}</p>
-                <p><span>Invoice Date:</span> {formatDate(bill.invoice_date)}</p>
+                <p><span>Invoice Date:</span> On-Billing</p>
               </div>
               <div className="bill-detail-row">
                 <p><span>Booking Date:</span> {formatDate(bill.booking_date)}</p>
@@ -166,6 +166,7 @@ const ViewBillAfterBooking = () => {
                         <th>Size</th>
                         <th>Rate</th>
                         <th>Quantity</th>
+                        <th>Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -175,6 +176,7 @@ const ViewBillAfterBooking = () => {
                         <td>{item.item_size}</td>
                         <td>{item.rateOfOne}</td>
                         <td>{item.quantity}</td>
+                        <td>{item.quantity*item.rateOfOne}</td>
                         </tr>))}
                     </tbody>
                   </table>
@@ -185,7 +187,7 @@ const ViewBillAfterBooking = () => {
                 <p><span>CGST:</span> {bill.gst / 2}</p>
                 <p><span>SGST:</span> {bill.gst / 2}</p>
                 <p><span>Discount:</span> {bill.discount}</p>
-                <p><span>Total Amount:</span> {bill.total_amount}</p>
+                <p><span>Rent:</span> {bill.total_amount}</p>
               </div>
             </div>
             <div className="bill-total">
