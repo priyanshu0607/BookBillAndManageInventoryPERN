@@ -144,7 +144,7 @@ const combination = async(id)=>{
                   <td>{booking.status}</td>
                   <td>
                     <button
-                      className="btn btn-primary"
+                      className="btn1 btn-primary"
                       onClick={() => combination(booking.bill_id)}
                       disabled={isLoading}
                     >
